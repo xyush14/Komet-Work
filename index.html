@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Komet — Designing a Web3 wallet humans actually understand · Ayush Shivhare</title>
+<meta name="description" content="A 16-month case study of designing Komet — a Web3 social wallet and meme-coin marketplace — end-to-end. Six flows, ERC-4337 smart wallets, one sole designer, 1M+ activated users.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  /* Flow stage — full-bleed, breaks out of 880px column to use the whole viewport */
+  .flow-stage {
+    margin: 56px calc(-50vw + 50%) 56px calc(-50vw + 50%);
+    width: 100vw;
+    background: #0a0a0a;
+    padding: 56px 0 48px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .flow-stage-inner {
+    width: min(96vw, 2400px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.18) transparent;
+  }
+  .flow-stage-inner::-webkit-scrollbar { height: 8px; }
+  .flow-stage-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+  .flow-stage img.flow-img {
+    display: block;
+    height: auto;
+    width: 100%;
+    min-width: 1200px;
+    border-radius: 10px;
+  }
+  .flow-stage img.flow-img.tall { min-width: 1400px; }
+  .flow-stage img.flow-img.bridge { min-width: 1100px; }
+
+  .flow-caption {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: center;
+    margin-top: 28px;
+    max-width: 760px;
+    padding: 0 24px;
+    line-height: 1.7;
+  }
+  .flow-caption strong { color: var(--text-dim); font-weight: 500; }
+
+  /* Flow meta strip */
+  .flow-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 32px 0 0;
+    padding: 20px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .flow-meta .item .k {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+  .flow-meta .item .v {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  /* Outcome cards */
+  .outcomes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 32px 0;
+  }
+  .outcome {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .outcome .num {
+    font-family: var(--serif);
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 8px;
+    color: var(--accent);
+  }
+  .outcome .desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* Decision cards */
+  .decisions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 32px 0;
+  }
+  .decision {
+    background: linear-gradient(180deg, var(--bg-card) 0%, #131313 100%);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .decision .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--pink);
+    margin-bottom: 12px;
+  }
+  .decision h4 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .decision p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* Inline credit links */
+  .chapter a.person, .credits a.person, .endcap a.person {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,77,193,0.4);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .chapter a.person:hover, .credits a.person:hover { border-color: var(--pink); color: var(--pink); }
+
+  /* Credits block */
+  .credits {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px;
+    margin-top: 64px;
+  }
+  .credits .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-faint);
+    margin-bottom: 24px;
+  }
+  .credits h3 { margin: 0 0 8px !important; font-size: 20px !important; font-family: var(--serif) !important; font-weight: 400 !important; }
+  .credit-row {
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+  }
+  .credit-row:first-of-type { border-top: none; padding-top: 0; }
+  .credit-row p { margin: 0; font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+
+  /* Concept primitives section */
+  .primitives {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 24px 0 32px;
+  }
+  .primitive {
+    padding: 14px 16px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .primitive .k {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- TOP NAV -->
+    <div class="topnav">
+      <a class="brand" href="../index.html">.xyush</a>
+      <nav>
+        <a href="../index.html#projects">projects</a>
+        <a href="../index.html#about">about</a>
+        <a href="../index.html#say-hello">say hello</a>
+      </nav>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-tags">
+        <span>Web3 · Wallet</span><span class="dot">·</span>
+        <span>ERC-4337</span><span class="dot">·</span>
+        <span>Mobile</span><span class="dot">·</span>
+        <span>End-to-end</span><span class="dot">·</span>
+        <span>16 months</span>
+      </div>
+      <div class="hero-eyebrow">A glimpse of my contributions to</div>
+      <h1>Komet — designing a Web3 wallet humans actually <em>understand</em>.</h1>
+      <p class="hero-sub">Six flows. Sixteen months. One sole designer. The point of this case study isn't to walk you through every screen I shipped — it's to show you the <em>shape</em> of the product, the decisions that defined it, and the small handful of moments where I bet against Web3 orthodoxy and it paid.</p>
+    </section>
+
+    <!-- META -->
+    <div class="meta">
+      <div class="meta-item"><div class="k">Role</div><div class="v">Sole product designer</div></div>
+      <div class="meta-item"><div class="k">Timeline</div><div class="v">Jul 2023 – Oct 2024</div></div>
+      <div class="meta-item"><div class="k">Team</div><div class="v"><a class="person" href="https://www.linkedin.com/in/thekushgupta/" target="_blank" rel="noopener">Kush Gupta</a> (Founder), PM, <a class="person" href="https://www.linkedin.com/in/devyanibhati/" target="_blank" rel="noopener">Devyani Bhati</a> (Design lead, advisory), Eng — now at PayPal, Zepto, MEXC</div></div>
+      <div class="meta-item"><div class="k">Surface</div><div class="v">Onboarding · App Interface · Send · Bridge · NFT Listing · Drops · Rewards · 11 feature areas</div></div>
+      <div class="meta-item"><div class="k">Outcome</div><div class="v">1M+ activated users</div></div>
+    </div>
+
+    <!-- INTRO -->
+    <article class="chapter" style="border-top: none; padding-top: 0; margin-bottom: 80px;">
+      <h3>What Komet is, in one paragraph.</h3>
+      <p>Komet is a Web3 social wallet and meme-coin marketplace. It serves three audiences whose mental models barely overlap — degens trading at speed, crypto-native users who want full control, and a long tail of curious newcomers who'd heard about a meme coin and didn't want to feel stupid clicking around. Most wallets pick one of those three and bend the experience around them. We had to serve all three from the same surface, on a small team, while the chains and standards underneath were still moving.</p>
+      <p>Under the hood, Komet runs on <strong>ERC-4337 smart wallets</strong>. That's not a marketing line — it's the single technical primitive that made the rest of the product possible: pay gas in any ERC-20, save up to 70% on transactions, social recovery, on-chain 2FA. Most of the design decisions you'll read below are downstream of that one technical choice.</p>
+      <p>I joined as the first full-time product designer in July 2023. Sixteen months later I'd shipped — alone — every flow you're about to scroll through.</p>
+    </article>
+
+    <!-- INDEX -->
+    <section class="index">
+      <div class="section-label">The flows</div>
+      <ul class="chapter-list">
+        <li><span class="num">01</span><span class="title">Onboarding & smart-wallet deployment<small>Two doors into the same room — and what happens after the user walks through</small></span><span class="arrow">→</span></li>
+        <li><span class="num">02</span><span class="title">App Interface — the home<small>One screen has to make sense to a degen, a trader, and your aunt. How.</small></span><span class="arrow">→</span></li>
+        <li><span class="num">03</span><span class="title">The Send flow<small>Making "send" feel like Venmo, not a 1998 bank transfer</small></span><span class="arrow">→</span></li>
+        <li><span class="num">04</span><span class="title">The Bridge<small>Moving value across chains, with the price discovery shown — not hidden</small></span><span class="arrow">→</span></li>
+        <li><span class="num">05</span><span class="title">NFT Listing<small>One flow, two branches, no dead ends</small></span><span class="arrow">→</span></li>
+        <li><span class="num">06</span><span class="title">Drops<small>Turning a meme-coin marketplace into a real-time social experience</small></span><span class="arrow">→</span></li>
+        <li><span class="num">07</span><span class="title">Building the system as a team of one<small>~70 tokens, ~120 components, 16 months</small></span><span class="arrow">→</span></li>
+      </ul>
+    </section>
+
+    <!-- ============ CHAPTER 01 — ONBOARDING & DEPLOYMENT ============ -->
+    <article class="chapter">
+      <div class="chapter-num">CHAPTER 01</div>
+      <h2>Onboarding & smart-wallet deployment</h2>
+      <p class="chapter-tagline">Two doors into the same room — and what happens after the user walks through.</p>
+
+      <div class="flow-meta">
+        <div class="item"><div class="k">Trigger</div><div class="v">First-time user</div></div>
+        <div class="item"><div class="k">Paths</div><div class="v">Sign in with Google · WalletConnect</div></div>
+        <div class="item"><div class="k">Tech</div><div class="v">ERC-4337 smart wallet on Base</div></div>
+        <div class="item"><div class="k">End state</div><div class="v">App home, ready to transact</div></div>
+      </div>
+    </article>
+
+    <div class="flow-stage">
+      <div class="flow-stage-inner">
+        <img class="flow-img tall" src="screens/flow-01-onboarding-deployment.png" alt="Komet onboarding & smart-wallet deployment flow">
+      </div>
+      <div class="flow-caption"><strong>Onboarding, both paths plus deployment.</strong> Top: social login via Google → smart wallet deploy → app home. Bottom: WalletConnect → connect external wallet → smart wallet identity. Everyone arrives at the same place: a working wallet with @username, address chip, and the ERC-4337 features explained inline.</div>
+    </div>
+
+    <article class="chapter" style="border-top: none; padding-top: 0;">
+      <h3>The problem in one sentence</h3>
+      <p>Standard Web3 onboarding asks new users to write down a 12-word seed phrase before they've understood what a wallet is for. By the time they hit that screen, ~60% of them are already gone.</p>
+
+      <div class="pullquote">The drop-off wasn't because the step was hard. It was because the user had no reason to care yet.</div>
+
+      <h3>The reframe</h3>
+      <p>I rebuilt the entire flow around a different question: <em>what does the user need to feel before they're willing to invest 60 seconds in security setup?</em> The answer was: they need to have used the product once.</p>
+      <p>So the new sequence above defers the seed-phrase moment until <em>after</em> the user has already created an identity (their @username), watched their wallet deploy on-chain, and is sitting in front of something that already feels like theirs. The seed-phrase reveal lands with weight, not friction.</p>
+
+      <h3>Why two paths instead of one</h3>
+      <p>The temptation in any onboarding refresh is to pick a single hero path and bury the alternatives. We deliberately didn't. New users want speed and familiarity — Google sign-in is a flow they've completed a hundred times. Crypto-native users want to bring their existing wallet — they'd churn instantly if we pretended their MetaMask, Zerion, or Ledger didn't exist.</p>
+      <p>Both paths sit on the same screen, with subtle hierarchy. Social Login gets the gradient CTA. WalletConnect sits below, in a calmer container, ready for the people who already know what they want.</p>
+
+      <div class="decisions">
+        <div class="decision">
+          <div class="label">Decision · Smart-wallet deploy</div>
+          <h4>Showing the deploy, not hiding it</h4>
+          <p>Smart wallet deployment takes 5–15 seconds on Base. Most apps hide this behind a generic spinner. I gave it a dedicated screen — "Deploying Komet Smart wallet on Base" — with a real progress visualisation and a one-line "this happens once" copy. It converted curiosity into trust at the exact moment trust was up for grabs.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Identity</div>
+          <h4>Username over address, everywhere</h4>
+          <p>The end state isn't a 0x… address. It's <em>@ratnakush</em>, with the address (0x32…ddx3) demoted to a chip below. This single decision propagates through every screen in the rest of the product — recipients are people, not hex strings.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · ERC-4337 reveal</div>
+          <h4>Don't market the tech — explain the benefit</h4>
+          <p>The post-deploy screens explain ERC-4337 in three plain-English lines: "Pay gas in any ERC-20 token & save up to 70%", "Secure your assets with social recovery and on-chain 2FA", "Power your transactions with decentralised storage". Each is the user benefit, not the standard's name. The acronym is in the corner, not the headline.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Microcopy</div>
+          <h4>"Looks good, LFG ✨"</h4>
+          <p>The username success state. That tiny line of copy did real work — it told the user the form had passed, that they were one tap from being inside, and that this product wasn't taking itself too seriously. Designers underestimate how much trust microcopy buys you in Web3.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="label">Outcome</div>
+        <p>Onboarding completion roughly doubled in the first quarter post-launch. Drop-off at the seed-phrase step fell from ~60% of starts to single digits. Time-to-first-transaction came down from ~4 minutes to under 90 seconds for users picking the social path.</p>
+      </div>
+    </article>
+
+    <!-- ============ CHAPTER 02 — APP INTERFACE ============ -->
+    <article class="chapter">
+      <div class="chapter-num">CHAPTER 02</div>
+      <h2>App Interface — the home</h2>
+      <p class="chapter-tagline">One screen has to make sense to a degen, a trader, and your aunt. How.</p>
+
+      <div class="flow-meta">
+        <div class="item"><div class="k">Trigger</div><div class="v">App open, signed in</div></div>
+        <div class="item"><div class="k">Surfaces</div><div class="v">Wallet · Discovery (Trending, Hot mints, Spots, Whales, Drops) · Header states</div></div>
+        <div class="item"><div class="k">Mental modes</div><div class="v">Browse · Trade · Manage</div></div>
+        <div class="item"><div class="k">Constraint</div><div class="v">No tabs. One scroll.</div></div>
+      </div>
+    </article>
+
+    <div class="flow-stage">
+      <div class="flow-stage-inner">
+        <img class="flow-img tall" src="screens/flow-02-app-interface.png" alt="Komet app interface — home screen with header states, portfolio, and discovery sections">
+      </div>
+      <div class="flow-caption"><strong>The home, in detail.</strong> Header states (welcome, network, multi-chain), portfolio summary with Send/Buy/Swap/Bridge as primary actions, Collectibles vs. Coins toggle, and the five discovery rails: Trending, Hot mints, Spots, Whales, Drops. Each rail has its own meaning — the annotations call out the rules.</div>
+    </div>
+
+    <article class="chapter" style="border-top: none; padding-top: 0;">
+      <h3>The problem with most Web3 home screens</h3>
+      <p>They're either a degen dashboard (charts, gas tracker, mempool — useless to a newcomer) or a consumer feed (NFT thumbnails — useless to a trader). The home is where the three audiences I mentioned in the intro come into the most direct conflict, because a single screen has to serve all of them on every app open.</p>
+
+      <h3>The reframe</h3>
+      <p>I stopped thinking about the home as one surface. I started thinking about it as <em>three mental modes the same user moves through during a session</em> — browse (what's out there?), trade (what's mine doing?), manage (what should I do next?). Then I asked: can a single scroll serve all three modes if the order respects the user's cognitive load?</p>
+
+      <p>The answer was yes, and the order matters: <strong>your portfolio first</strong> (because you opened the app to check on yourself), <strong>your actions second</strong> (Send / Buy / Swap / Bridge — the four things you're most likely to do), <strong>discovery third</strong> (where the next session's interest comes from). Five discovery rails, each with a clear definition, in a deliberate order.</p>
+
+      <div class="decisions">
+        <div class="decision">
+          <div class="label">Decision · Portfolio first</div>
+          <h4>3.0052 ETH, $1,880.88 USD — at the top</h4>
+          <p>The very first thing on the home is the user's net worth, in ETH and USD. Not a marketing banner, not a featured drop. The fiat anchor is non-negotiable; in Web3, "what is my stuff worth in real money?" is the first question on every app open and it should be the first answer.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Action row</div>
+          <h4>Send · Buy · Swap · Bridge — equal weight</h4>
+          <p>Four equal pills. No "primary" CTA among them. The user's intent on app-open determines which they tap; we don't preempt it. Bridge included alongside the others — chapter 04 explains why.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Definitions inline</div>
+          <h4>"What is Trending?" · "What are Hot mints?" · "What are Spots?"</h4>
+          <p>Every rail label has a one-line definition next to it. Web3 is full of jargon ("spots", "whales") that means nothing to a new user. Rather than gate-keep, we explained inline — the user learns the language by using the product.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Multi-chain hint</div>
+          <h4>"You're in multi-chain view" — header state</h4>
+          <p>The header shifts copy based on the user's network state. New user on Ethereum sees "You're on Ethereum network." Multi-chain user sees "You're in multi-chain view." The state is always answered, never assumed. Eliminated a category of "wait, what network am I on?" support tickets.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · "Flip" feature</div>
+          <h4>Naming the trade pattern users were already doing</h4>
+          <p>Users were buying NFTs, listing them at a higher price, and accepting the offer — a flip. We named it, surfaced it as a tile in the home, and built tooling around it. The product feature came from observing the trading behaviour, not from a roadmap doc.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Collectibles vs Coins</div>
+          <h4>One toggle, not two tabs</h4>
+          <p>The portfolio is split into NFTs (Collectibles) and tokens (Coins) with a single toggle, not two top-level tabs. Tabs would have implied they were different products; a toggle implies they're two views of the same wallet. Small framing, big mental-model implication.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- ============ CHAPTER 03 — SEND FLOW ============ -->
+    <article class="chapter">
+      <div class="chapter-num">CHAPTER 03</div>
+      <h2>The Send flow</h2>
+      <p class="chapter-tagline">Making "send" feel like Venmo, not a 1998 bank transfer.</p>
+
+      <div class="flow-meta">
+        <div class="item"><div class="k">Trigger</div><div class="v">User wants to send tokens to another wallet</div></div>
+        <div class="item"><div class="k">Branches</div><div class="v">No prior contacts · Saved contact · Unsaved contact · Insufficient balance</div></div>
+        <div class="item"><div class="k">Heuristic</div><div class="v">Every screen answers: what's happening, what does it cost, what can go wrong</div></div>
+      </div>
+    </article>
+
+    <div class="flow-stage">
+      <div class="flow-stage-inner">
+        <img class="flow-img" src="screens/flow-03-send-flow.png" alt="Komet send flow — full annotated flow with branches and edge states">
+      </div>
+      <div class="flow-caption"><strong>The complete send flow with engineering annotations.</strong> Top row covers the saved-contact path; bottom row covers the no-prior-contact and scan-to-add paths. Yellow notes are design specs ("Show this state just within .3ms of pasting/scanning address"). Red annotations call out error and edge states.</div>
+    </div>
+
+    <article class="chapter" style="border-top: none; padding-top: 0;">
+      <h3>The problem that broke the abstraction</h3>
+      <div class="pullquote">Users who completed transactions correctly were still messaging support to ask "did it work?"</div>
+      <p>That's the symptom that made me throw out the V1 send flow and rebuild it. The transaction had executed. The screen had shown the success state. The hash was on-chain. By every conventional measure, the design had succeeded. But the <em>user</em> was still anxious — and that's not a UX failure of buttons or layout. It's a failure of trust.</p>
+
+      <h3>The heuristic I built around</h3>
+      <p>I named the project <strong>Humane Transactions</strong> internally. Every screen in the send flow had to answer three questions, in plain language, before the user tapped confirm:</p>
+      <ol>
+        <li><strong>What is about to happen?</strong> — the recipient, the amount, the token, the network.</li>
+        <li><strong>What will it cost me?</strong> — gas in plain English with the fiat anchor.</li>
+        <li><strong>What can go wrong, and what's reversible?</strong> — explicit error and edge-case screens, never red modals.</li>
+      </ol>
+      <p>If a screen couldn't answer all three, it wasn't ready to ship. The framework did more for the team than any individual screen — over the year, every send-flow PR got reviewed against those three questions before it shipped.</p>
+
+      <h3>The progressive-disclosure rule for the recipient field</h3>
+      <p>Look at the annotated rules in the file: <em>If max wallet ≥ n & contacts = 0 → show all wallets in expanded state. If max wallet ≥ 2 & contacts ≥ n → show max 2 wallets in expanded state and show contacts. If max wallet = 0 → only show contacts.</em></p>
+      <p>That rule is the difference between a Send screen that feels empty for new users (intimidating) and a Send screen that feels overwhelming for power users (tax). The system adapts to the user's actual data; the design respects what's there.</p>
+
+      <div class="decisions">
+        <div class="decision">
+          <div class="label">Decision · Recipient</div>
+          <h4>Identity, not hash</h4>
+          <p>Standard Web3 send screens lead with a 42-character hex string. We replaced the primary line with a saved contact name, a username, or a recognised contract label. The raw address sits below in monospace, expandable. This single change removed the most common source of "is this the right person?" anxiety.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Address book</div>
+          <h4>Save-after-send, not save-before</h4>
+          <p>The flow detects when you're sending to a brand-new address and offers to save it as a contact <em>after</em> the send completes — not before, when the user is anxious about the transaction itself. One context at a time.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · 0.3 second feedback</div>
+          <h4>Acknowledge the paste before validation</h4>
+          <p>The annotated note in the file ("Show this state just within .3ms of pasting/scanning address") is a real design spec. The instant the user pastes or scans, the chip animates in. Not after a server roundtrip, not after debounced validation. The acknowledgement is the design.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Insufficient balance</div>
+          <h4>Don't dead-end the user</h4>
+          <p>If the user tries to send more than they have, we don't show an error and stop. We surface "Add funds" inline, route to the buy flow, and on completion give them "Continue Sending" — the original intent is preserved across the detour. Most wallets fail this; they make you start over.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Token switcher</div>
+          <h4>"Show balance along each token while switching token"</h4>
+          <p>Another rule from the canvas. The token-select sheet shows your balance next to every token, not just the selected one. So users can see what they have, not just what they're sending — preempts the "wait, do I even have that token?" detour.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Power mode</div>
+          <h4>The escape hatch for degens</h4>
+          <p>For users sending 40 transactions a day, the verbose layout is friction. So I designed a "power mode" — a settings toggle that compresses the transaction screen to its minimum. ~18% of users turned it on within a month. Power users get speed; everyone else gets safety.</p>
+        </div>
+      </div>
+
+      <h3>Outcome</h3>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="num">~75%</div>
+          <div class="desc">Reduction in support tickets containing "did it work?" or "did the transaction go through?"</div>
+        </div>
+        <div class="outcome">
+          <div class="num">↑</div>
+          <div class="desc">Send completion rate improved across all user segments</div>
+        </div>
+        <div class="outcome">
+          <div class="num">∞</div>
+          <div class="desc">"Humane Transactions" became the team's evaluation language for every new feature</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ============ CHAPTER 04 — BRIDGE ============ -->
+    <article class="chapter">
+      <div class="chapter-num">CHAPTER 04</div>
+      <h2>The Bridge</h2>
+      <p class="chapter-tagline">Moving value across chains, with the price discovery shown — not hidden.</p>
+
+      <div class="flow-meta">
+        <div class="item"><div class="k">Trigger</div><div class="v">User wants to move tokens between chains</div></div>
+        <div class="item"><div class="k">Networks</div><div class="v">Ethereum · Polygon · others</div></div>
+        <div class="item"><div class="k">Providers</div><div class="v">Hop · Connext · Axelar · 1inch — aggregated</div></div>
+        <div class="item"><div class="k">Hard part</div><div class="v">Showing the trade-off without drowning the user</div></div>
+      </div>
+    </article>
+
+    <div class="flow-stage">
+      <div class="flow-stage-inner">
+        <img class="flow-img bridge" src="screens/flow-04-bridge.png" alt="Komet bridge flow — cross-chain transfer with provider selection and cost breakdown">
+      </div>
+      <div class="flow-caption"><strong>Bridge, end to end.</strong> From-network and to-network selectors, token search, cost preview ("Total cost = Send + Gas + 0.37% Komet Fee"), best-price quote, "View all 4 quotes" expansion (Hop / Connext / Axelar / 1inch), estimated timeline. Bridge complete on the right.</div>
+    </div>
+
+    <article class="chapter" style="border-top: none; padding-top: 0;">
+      <h3>Why bridges are the hardest flow in Web3</h3>
+      <p>A bridge is, at its mechanical core, four things stacked: the source network, the destination network, the token swap that happens in between (because most "bridges" are technically swaps under the hood), and the third-party provider doing the actual moving. Each of those four has its own cost, its own time-to-finality, and its own failure mode. Most bridges punish the user for asking — they hide gas, hide provider, hide timing, give one quote, and call it simplicity.</p>
+      <p>I disagreed with that framing. The user crossing chains is, by definition, a thoughtful user. Hiding the trade-off doesn't help them — it patronises them. And if anything goes wrong (and bridges have the highest rate of "anything going wrong" in Web3), they have no idea why.</p>
+
+      <h3>The reframe</h3>
+      <div class="pullquote">A good bridge UX is not the one with the fewest screens. It's the one that lets the user understand <em>why</em> the cost and time are what they are.</div>
+      <p>So I designed a flow that does the opposite of hiding: it surfaces the cost breakdown ("Total cost = Send + Gas + 0.37% Komet Fee"), shows the best-price quote first, and offers "View all 4 quotes" for users who want to compare Hop vs. Connext vs. Axelar vs. 1inch directly. Estimated time is shown in plain language ("20 mins"). Komet's fee is named, not buried.</p>
+
+      <div class="decisions">
+        <div class="decision">
+          <div class="label">Decision · Provider aggregation</div>
+          <h4>One bridge UI, four providers under it</h4>
+          <p>We aggregated the major bridge protocols and let the user pick or accept the best price. This is much harder to build than a single-provider integration — but it's how a wallet earns trust over time. We're not gatekeeping the user behind one liquidity source.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Show the fee, name the fee</h4>
+          <p>"0.37% Komet Fee" is shown in the cost breakdown, clearly labelled as ours. We don't hide it inside an "all providers" lump. Users would have found it eventually — and would have lost trust at the moment they did. Showing it upfront is the cheaper trust transaction.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · "Fetching best prices for you"</h4>
+          <p>The loading state for quote-fetching is named, not silent. The user sees the system working on their behalf. If no route exists ("No routes found. Try again with higher amount") the error is plain English plus the actionable next step. No "try again later" dead-ends.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Estimated timeline as a strip</h4>
+          <p>The bottom of the bridge sheet shows an estimated timeline: "Funds sent on Ethereum → Swap on 1inch → Bridge to Polygon → Funds available". A bridge takes 20 minutes; the user should know what's happening at minute 7.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="label">The deeper point</div>
+        <p>The bridge surface is where I learned the most about how to design for Web3 — because every assumption that holds in fintech (single-provider, single-currency, single-network) breaks. The product gets better when the design respects that complexity instead of hiding it.</p>
+      </div>
+    </article>
+
+    <!-- ============ CHAPTER 05 — NFT LISTING ============ -->
+    <article class="chapter">
+      <div class="chapter-num">CHAPTER 05</div>
+      <h2>NFT Listing</h2>
+      <p class="chapter-tagline">One flow, two branches, no dead ends.</p>
+
+      <div class="flow-meta">
+        <div class="item"><div class="k">Trigger</div><div class="v">User wants to list one or more NFTs for sale</div></div>
+        <div class="item"><div class="k">Branches</div><div class="v">Listing 1 item · Listing &gt; 1 item · Komet wallet · Other wallet</div></div>
+        <div class="item"><div class="k">Edge case</div><div class="v">Mixed selection (some listed, some not)</div></div>
+      </div>
+    </article>
+
+    <div class="flow-stage">
+      <div class="flow-stage-inner">
+        <img class="flow-img tall" src="screens/flow-05-nft-listing.png" alt="Komet NFT listing flow — full branched flow">
+      </div>
+      <div class="flow-caption"><strong>NFT listing, all paths.</strong> The detail page on the left forks: top into multi-item listing, bottom into single-item. Both converge into "Complete your Listings" but split again on wallet type (Komet vs. Other). The right side handles the post-listing state: cancellable listings, transferable items, and the rules for what's shown when a user selects a mixed batch.</div>
+    </div>
+
+    <article class="chapter" style="border-top: none; padding-top: 0;">
+      <h3>Why this flow was hard</h3>
+      <p>NFT listing looks simple from the outside — pick item, set price, confirm. The reason every marketplace screws it up is the combinatorics underneath: listing one item is a different mental task than listing ten; signing with a Komet smart wallet is a different transaction than signing with an external EOA; and a user who selects a mix of "already listed" and "not listed" items is doing something the system has to <em>understand</em> before the UI can be coherent.</p>
+
+      <p>I made three structural calls early that shaped everything else:</p>
+
+      <div class="decisions">
+        <div class="decision">
+          <div class="label">Decision · Branching</div>
+          <h4>Same start, divergent middle, same end</h4>
+          <p>"Listing 1 item" and "Listing &gt; 1 item" share the entry and the success state, but the middle differs. One item gets a single-listing review; multiple items get a per-item editable summary with "Apply changes to all" as an escape hatch. Forcing them into one flow would have made each worse. Splitting them — but visibly converging — kept the mental model clean.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Wallet-type fork</div>
+          <h4>Hide the Web3 plumbing where you can</h4>
+          <p>Komet smart wallets sign in-app with no popup. External wallets need WalletConnect-style confirmation. Rather than show this difference everywhere, the flow forks at exactly one screen ("Complete your Listings") and rejoins immediately after. The complexity is contained.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Mixed-selection rules</div>
+          <h4>The rules, written down on the canvas</h4>
+          <p>The note on the canvas is a real design spec: "If first selected item is a listed one, show: Cancel listing, Transfer. If first selected item is unlisted, show: List Items, Transfer." That tiny rule was the difference between a coherent multi-select and a broken one. Documented on the canvas because that's where engineers actually read.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Whale signal as a callout</div>
+          <h4>"742+ whale participation in this collection"</h4>
+          <p>The detail page surfaces social proof — number of whale holders, unique collectors, top traits — at the top. For an NFT trader, this is the data they came for. For a newcomer, it's the same answer they'd otherwise have to leave the app to find.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- ============ CHAPTER 06 — DROPS ============ -->
+    <article class="chapter">
+      <div class="chapter-num">CHAPTER 06</div>
+      <h2>Drops</h2>
+      <p class="chapter-tagline">Turning a meme-coin marketplace into a real-time social experience.</p>
+
+      <div class="flow-meta">
+        <div class="item"><div class="k">Surface</div><div class="v">Discover · Drop room · Mint · Add Guardians · Successful claim</div></div>
+        <div class="item"><div class="k">Mode</div><div class="v">Live, social, time-bound</div></div>
+        <div class="item"><div class="k">Constraint</div><div class="v">Must feel exciting without manufacturing urgency</div></div>
+      </div>
+    </article>
+
+    <div class="flow-stage">
+      <div class="flow-stage-inner">
+        <img class="flow-img tall" src="screens/flow-06-drop-flow.png" alt="Komet drops flow — discover, mint, guardians, claim, social">
+      </div>
+      <div class="flow-caption"><strong>The drop flow, end to end.</strong> Discover (categories, hot mints, trending) → drop detail with countdown and supply → mint with multisig "Add Guardians" branch → claim → successful mint with creator follow + tweet share. The right side handles the post-claim state, rewards (Komets), and leaderboard updates.</div>
+    </div>
+
+    <article class="chapter" style="border-top: none; padding-top: 0;">
+      <h3>What we threw out from V1</h3>
+      <p>V1 of drops was a static feed — a catalogue of upcoming and live mints, sortable by category. It worked; nobody got stuck. But meme coins and NFT drops are inherently <em>social</em> events. Half the fun is being there at the same moment as everyone else. The V1 feed treated drops like inventory. We needed it to feel like a concert.</p>
+
+      <h3>The hard design decision</h3>
+      <p>Live events are inherently chaotic. Activity happens fast, prices move, things sell out. The temptation is to surface every single thing — counts ticking, prices flashing, friend pings. This kind of design is engaging in the casino sense and exhausting in the human sense.</p>
+
+      <p>I drew a line: <em>the live screen would surface activity, but never flash.</em> No bouncing numbers. No urgency-manufacturing animations. Information is presented; it doesn't beg for attention. This was a real disagreement with the growth instincts on the team. We tested both. The calmer version retained better — people stayed in the drop room longer when it didn't feel like a slot machine.</p>
+
+      <div class="decisions">
+        <div class="decision">
+          <div class="label">Decision · Discovery</div>
+          <h4>Categories, but flat</h4>
+          <p>Trending · Hot mints · Spots · Whales · Drops. Five horizontal categories, no nesting, no second-level taxonomy. Discovery is a different mental mode from participation; a flat surface respects that.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Guardians</div>
+          <h4>Multisig in plain English</h4>
+          <p>"Add Guardians to help you validate and execute transactions" — that's the entire framing for what is, technically, a multisig setup. Most Web3 wallets ask "what's your security policy?" We asked "who do you trust, and how much?" The Guardians naming did most of that work.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Post-claim social</div>
+          <h4>Earn the share, don't extract it</h4>
+          <p>The success state offers "Follow @creator on Twitter" and "Like this Tweet" — but as low-pressure CTAs, never as required steps. The social action is a <em>celebration</em>, not a fee for completing the mint.</p>
+        </div>
+        <div class="decision">
+          <div class="label">Decision · Rewards (Komets)</div>
+          <h4>Earn-while-you-mint, surfaced inline</h4>
+          <p>Successful claims earn Komets — a points currency that ties into the Shooting Stars rewards loop. The earning is shown inline on the success screen, not in a separate "you got points" toast. Fewer screens, more visibility, no nagging.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- ============ CHAPTER 07 — DESIGN SYSTEM ============ -->
+    <article class="chapter">
+      <div class="chapter-num">CHAPTER 07</div>
+      <h2>Building the system as a team of one</h2>
+      <p class="chapter-tagline">~70 tokens, ~120 components, 16 months.</p>
+
+      <p>I shipped enough surface area in 16 months that I had to build the design system in parallel, not after. By month nine, engineers had stopped asking me to spec individual components — they were composing screens out of the system on their own.</p>
+
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="num">~70</div>
+          <div class="desc">Tokens — color, type, spacing, motion, elevation. Defined once, used everywhere.</div>
+        </div>
+        <div class="outcome">
+          <div class="num">~120</div>
+          <div class="desc">Components covering ~80% of every screen I shipped.</div>
+        </div>
+        <div class="outcome">
+          <div class="num">12</div>
+          <div class="desc">Web3 primitives canonicalised — see below.</div>
+        </div>
+      </div>
+
+      <h3>The 12 Web3 primitives</h3>
+      <p>Most of the system was just buttons, type, and inputs — boring, important. The work that paid back the most was canonicalising the dozen recurring Web3-specific patterns:</p>
+      <div class="primitives">
+        <div class="primitive"><div class="k">01</div>Address chip</div>
+        <div class="primitive"><div class="k">02</div>Network selector</div>
+        <div class="primitive"><div class="k">03</div>Gas line</div>
+        <div class="primitive"><div class="k">04</div>Signature request</div>
+        <div class="primitive"><div class="k">05</div>Transaction status</div>
+        <div class="primitive"><div class="k">06</div>Token row</div>
+        <div class="primitive"><div class="k">07</div>NFT card</div>
+        <div class="primitive"><div class="k">08</div>Recipient (identity)</div>
+        <div class="primitive"><div class="k">09</div>Cost breakdown</div>
+        <div class="primitive"><div class="k">10</div>Empty / loading state</div>
+        <div class="primitive"><div class="k">11</div>Error state</div>
+        <div class="primitive"><div class="k">12</div>Success state</div>
+      </div>
+      <p>Each one had a single canonical implementation and a one-paragraph "why" doc. Once those twelve existed, the team stopped re-designing them per feature, and engineering stopped re-implementing them per ticket.</p>
+
+      <div class="pullquote">As a sole designer, the system is not overhead. It's leverage. I underinvested in it for three months because I was sprinting on features. Months four and five were spent paying interest. If I were starting again, I'd build the smallest version of the system on day one.</div>
+    </article>
+
+    <!-- WHAT I'D DO DIFFERENTLY -->
+    <article class="chapter">
+      <div class="chapter-num">CLOSING</div>
+      <h2>What I'd do differently</h2>
+      <p class="chapter-tagline">Three honest answers.</p>
+
+      <p>I shipped before testing more often than I should have. Some of that was forced by pace; some of it was me. Two flows in particular shipped with copy I'd written that confused users in a way I hadn't predicted. Both were caught in the first week post-launch and fixed quickly, but it cost trust internally. Next time, even a 30-minute hallway test would have caught both.</p>
+
+      <p>I underinvested in the design system in the first three months. Already covered above, but worth saying twice. It's the single highest-ROI investment I made in 16 months.</p>
+
+      <p>I should have written this case study while the work was happening, not eighteen months later. A lot of the decisions above are easier to defend a week later than from memory. If you're a designer reading this and you're shipping work right now — write it down as you go. Future-you will thank present-you.</p>
+    </article>
+
+    <!-- CREDITS -->
+    <section class="credits">
+      <div class="label">Credits</div>
+      <div class="credit-row">
+        <h3><a class="person" href="https://www.linkedin.com/in/thekushgupta/" target="_blank" rel="noopener">Kush Gupta</a></h3>
+        <p>Founder of Komet. Trusted a junior designer with the entire surface and pushed me harder than was comfortable. Most of the strongest decisions on this case study survived because Kush asked the better second question.</p>
+      </div>
+      <div class="credit-row">
+        <h3><a class="person" href="https://www.linkedin.com/in/devyanibhati/" target="_blank" rel="noopener">Devyani Bhati</a></h3>
+        <p>Design lead at Komet (advisory). Ex-Design Lead at Zepto, Unacademy, and Tickertape. Bi-weekly reviews that were ruthless about naming, structure, and craft. A lot of the language in the product — including "Humane Transactions" and "Guardians" — survived because Devyani insisted I defend it.</p>
+      </div>
+      <div class="credit-row">
+        <h3>Engineering</h3>
+        <p>The team that turned around builds in days that would have taken weeks elsewhere. They're now at PayPal, Zepto, and MEXC.</p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="endcap">
+      <p>If you're hiring for someone who can carry a real surface end-to-end — wallets, fintech, AI tools, or anything else where complexity has to feel simple — let's talk.</p>
+      <a href="../index.html#say-hello" class="cta">Say hello →</a>
+    </section>
+
+  </div>
+</body>
+</html>
